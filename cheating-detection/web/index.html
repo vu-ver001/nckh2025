@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ExamGuard AI — Hệ thống Giám sát Thi cử</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-base:      #0a0e1a;
+      --bg-panel:     #0f1628;
+      --bg-card:      #141c2e;
+      --bg-card2:     #1a2340;
+      --border:       #1f2d4a;
+      --border-glow:  #2a4080;
+
+      --accent:       #3b82f6;
+      --accent-glow:  rgba(59,130,246,.25);
+      --accent2:      #06b6d4;
+
+      --ok:           #22c55e;
+      --warn:         #f59e0b;
+      --danger:       #ef4444;
+      --danger-glow:  rgba(239,68,68,.3);
+
+      --text-primary: #e2e8f0;
+      --text-muted:   #64748b;
+      --text-dim:     #334155;
+
+      --radius:       12px;
+      --radius-sm:    8px;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      overflow: hidden;
+    }
+
+    /* ─── Layout ───────────────────────────────────────── */
+    .app { display: grid; grid-template-rows: 58px 1fr; height: 100vh; }
+
+    /* Topbar */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .topbar::after {
+      content: '';
+      position: absolute; bottom: -1px; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .brand-name { font-weight: 700; font-size: 15px; letter-spacing: .5px; }
+    .brand-sub { font-size: 11px; color: var(--text-muted); }
+
+    .topbar-center {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .status-badge {
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 14px; border-radius: 20px;
+      font-size: 12px; font-weight: 600; letter-spacing: .5px;
+      border: 1px solid;
+      transition: all .3s;
+    }
+    .status-badge.ok   { background: rgba(34,197,94,.1); border-color: rgba(34,197,94,.3); color: var(--ok); }
+    .status-badge.warn { background: rgba(245,158,11,.1); border-color: rgba(245,158,11,.3); color: var(--warn); }
+    .status-badge.danger {
+      background: rgba(239,68,68,.15); border-color: rgba(239,68,68,.4); color: var(--danger);
+      animation: pulse-badge .8s infinite alternate;
+    }
+    @keyframes pulse-badge { from { box-shadow: none; } to { box-shadow: 0 0 16px var(--danger-glow); } }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .clock { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-muted); }
+
+    /* Main grid */
+    .main { display: grid; grid-template-columns: 260px 1fr 300px; gap: 0; overflow: hidden; }
+
+    /* ─── Sidebar Left: Controls ───────────────────────── */
+    .sidebar-left {
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      padding: 20px 16px;
+      display: flex; flex-direction: column; gap: 20px;
+      overflow-y: auto;
+    }
+
+    .section-label {
+      font-size: 10px; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 1.2px;
+      margin-bottom: 10px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 10px 16px; border-radius: var(--radius-sm);
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      border: 1px solid transparent; transition: all .2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-primary {
+      background: var(--accent); color: #fff;
+    }
+    .btn-primary:hover { background: #2563eb; box-shadow: 0 0 20px var(--accent-glow); }
+
+    .btn-outline {
+      background: transparent; color: var(--text-primary);
+      border-color: var(--border);
+    }
+    .btn-outline:hover { background: var(--bg-card2); border-color: var(--border-glow); }
+
+    .btn-danger {
+      background: rgba(239,68,68,.15); color: var(--danger);
+      border-color: rgba(239,68,68,.3);
+    }
+    .btn-danger:hover { background: rgba(239,68,68,.25); }
+
+    .btn-success {
+      background: rgba(34,197,94,.15); color: var(--ok);
+      border-color: rgba(34,197,94,.3);
+    }
+    .btn-success:hover { background: rgba(34,197,94,.25); }
+
+    .btn-group { display: flex; flex-direction: column; gap: 8px; }
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    /* Separators */
+    .divider { height: 1px; background: var(--border); }
+
+    /* Threshold sliders */
+    .slider-group { display: flex; flex-direction: column; gap: 12px; }
+    .slider-item label {
+      display: flex; justify-content: space-between;
+      font-size: 12px; color: var(--text-muted); margin-bottom: 6px;
+    }
+    .slider-item label span { color: var(--accent2); font-weight: 600; }
+    input[type=range] {
+      width: 100%; accent-color: var(--accent);
+      height: 4px; cursor: pointer;
+    }
+
+    /* Detection toggles */
+    .toggle-list { display: flex; flex-direction: column; gap: 8px; }
+    .toggle-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 10px; border-radius: var(--radius-sm);
+      background: var(--bg-card); border: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .toggle-switch { position: relative; width: 36px; height: 20px; }
+    .toggle-switch input { display: none; }
+    .toggle-slider {
+      position: absolute; inset: 0; border-radius: 10px;
+      background: var(--text-dim); cursor: pointer; transition: .3s;
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: white; top: 3px; left: 3px; transition: .3s;
+    }
+    .toggle-switch input:checked + .toggle-slider { background: var(--accent); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(16px); }
+
+    /* ─── Center: Video ────────────────────────────────── */
+    .video-area {
+      display: flex; flex-direction: column; gap: 0;
+      background: #050810;
+      position: relative; overflow: hidden;
+    }
+
+    .video-wrapper {
+      flex: 1; position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    #videoCanvas {
+      max-width: 100%; max-height: 100%; object-fit: contain;
+      display: block;
+    }
+
+    /* Alert flash overlay */
+    .alert-overlay {
+      position: absolute; inset: 0; pointer-events: none;
+      border: 0px solid var(--danger);
+      transition: border-width .1s;
+    }
+    .alert-overlay.active {
+      border-width: 6px;
+      animation: flash-border .5s infinite alternate;
+    }
+    @keyframes flash-border {
+      from { box-shadow: inset 0 0 30px var(--danger-glow); border-color: var(--danger); }
+      to   { box-shadow: inset 0 0 60px var(--danger-glow); border-color: #ff8080; }
+    }
+
+    /* Scan-line effect */
+    .scanline {
+      position: absolute; inset: 0; pointer-events: none;
+      background: repeating-linear-gradient(0deg, rgba(0,0,0,.04) 0px, rgba(0,0,0,.04) 1px, transparent 1px, transparent 3px);
+    }
+
+    /* HUD corner marks */
+    .hud-corner {
+      position: absolute; width: 24px; height: 24px;
+      border-color: var(--accent2); border-style: solid; opacity: .6;
+    }
+    .hud-corner.tl { top: 12px; left: 12px; border-width: 2px 0 0 2px; }
+    .hud-corner.tr { top: 12px; right: 12px; border-width: 2px 2px 0 0; }
+    .hud-corner.bl { bottom: 12px; left: 12px; border-width: 0 0 2px 2px; }
+    .hud-corner.br { bottom: 12px; right: 12px; border-width: 0 2px 2px 0; }
+
+    /* No-stream placeholder */
+    .no-stream {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 14px; color: var(--text-dim);
+    }
+    .no-stream-icon { font-size: 48px; opacity: .4; }
+    .no-stream p { font-size: 14px; }
+
+    /* Bottom metrics strip */
+    .metrics-strip {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid var(--border);
+      background: var(--bg-panel);
+    }
+    .metric-cell {
+      padding: 10px 16px;
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .metric-cell:last-child { border-right: none; }
+    .metric-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .8px; }
+    .metric-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 22px; font-weight: 600;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .metric-sub { font-size: 10px; color: var(--text-muted); }
+
+    /* ─── Sidebar Right: Alerts ────────────────────────── */
+    .sidebar-right {
+      background: var(--bg-panel);
+      border-left: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .panel-title {
+      font-size: 13px; font-weight: 600;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .badge-count {
+      background: var(--danger); color: white;
+      border-radius: 10px; padding: 1px 7px;
+      font-size: 11px; font-weight: 700;
+    }
+    .btn-icon {
+      background: transparent; border: none; color: var(--text-muted);
+      cursor: pointer; padding: 4px; border-radius: 4px;
+      font-size: 13px; line-height: 1;
+      transition: all .2s;
+    }
+    .btn-icon:hover { background: var(--bg-card2); color: var(--text-primary); }
+
+    /* Event log */
+    .event-log {
+      flex: 1; overflow-y: auto; padding: 10px 12px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .event-log::-webkit-scrollbar { width: 4px; }
+    .event-log::-webkit-scrollbar-track { background: transparent; }
+    .event-log::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .event-item {
+      padding: 8px 10px; border-radius: var(--radius-sm);
+      border: 1px solid; font-size: 12px; line-height: 1.4;
+      animation: slide-in .3s ease;
+    }
+    @keyframes slide-in {
+      from { transform: translateX(20px); opacity: 0; }
+      to   { transform: translateX(0); opacity: 1; }
+    }
+    .event-item.level-HIGH     { background: rgba(239,68,68,.08);  border-color: rgba(239,68,68,.25);  }
+    .event-item.level-MEDIUM   { background: rgba(245,158,11,.08); border-color: rgba(245,158,11,.25); }
+    .event-item.level-LOW      { background: rgba(59,130,246,.08); border-color: rgba(59,130,246,.25); }
+    .event-item.level-CRITICAL { background: rgba(239,68,68,.18);  border-color: rgba(239,68,68,.5);   animation: slide-in .3s ease, flash-item .4s 3; }
+    @keyframes flash-item { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+
+    .event-header { display: flex; justify-content: space-between; margin-bottom: 3px; }
+    .event-type { font-weight: 600; font-size: 11px; }
+    .event-type.level-HIGH     { color: var(--danger); }
+    .event-type.level-MEDIUM   { color: var(--warn); }
+    .event-type.level-LOW      { color: var(--accent); }
+    .event-type.level-CRITICAL { color: #ff4040; }
+    .event-time { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+    .event-detail { font-size: 11px; color: var(--text-muted); }
+
+    .log-empty { text-align: center; padding: 40px 20px; color: var(--text-dim); font-size: 13px; }
+
+    /* Risk Gauge */
+    .risk-panel {
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .risk-label { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; display: flex; justify-content: space-between; }
+    .risk-track {
+      width: 100%; height: 8px;
+      background: var(--bg-card2); border-radius: 4px; overflow: hidden;
+    }
+    .risk-fill {
+      height: 100%; border-radius: 4px;
+      background: linear-gradient(90deg, var(--ok), var(--warn), var(--danger));
+      transition: width .4s cubic-bezier(.4,0,.2,1);
+    }
+    .risk-ticks {
+      display: flex; justify-content: space-between;
+      margin-top: 4px; font-size: 10px; color: var(--text-dim);
+    }
+
+    /* Mini chart area */
+    .chart-panel {
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    #riskChart {
+      display: block; width: 100%;
+      height: 50px; border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ─── TOPBAR ─────────────────────────────────────── -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">🎓</div>
+      <div>
+        <div class="brand-name">ExamGuard AI</div>
+        <div class="brand-sub">Hệ thống Giám sát Thi cử Thông minh</div>
+      </div>
+    </div>
+
+    <div class="topbar-center">
+      <div class="status-badge ok" id="statusBadge">
+        <div class="status-dot"></div>
+        <span id="statusText">SẴN SÀNG</span>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <span class="clock" id="clock">--:--:--</span>
+    </div>
+  </header>
+
+  <!-- ─── MAIN ───────────────────────────────────────── -->
+  <div class="main">
+
+    <!-- LEFT SIDEBAR: Controls -->
+    <aside class="sidebar-left">
+
+      <div>
+        <p class="section-label">🎥 Nguồn Video</p>
+        <div class="btn-group">
+          <button class="btn btn-primary" id="btnCamera" onclick="startProcessing()">
+            📷 Bật Camera 
+          </button>
+          <label class="btn btn-outline" style="cursor:pointer">
+            📂 Tải Video Lên
+            <input type="file" accept="video/*" id="fileInput" style="display:none" onchange="loadVideo(event)">
+          </label>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div>
+        <p class="section-label">▶ Điều khiển</p>
+        <div class="btn-row">
+          <button class="btn btn-success" id="btnStart" onclick="startProcessing()">▶ Bắt đầu</button>
+          <button class="btn btn-danger"  id="btnStop"  onclick="stopProcessing()">⏹ Dừng</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div>
+        <p class="section-label">⚙ Ngưỡng phát hiện</p>
+        <div class="slider-group">
+          <div class="slider-item">
+            <label>Độ tin cậy YOLO <span id="confVal">45%</span></label>
+            <input type="range" min="20" max="95" value="45" id="confSlider"
+              oninput="document.getElementById('confVal').textContent=this.value+'%'">
+          </div>
+          <div class="slider-item">
+            <label>Ngưỡng quay đầu <span id="headVal">0.65</span></label>
+            <input type="range" min="30" max="90" value="65" id="headSlider"
+              oninput="document.getElementById('headVal').textContent=(this.value/100).toFixed(2)">
+          </div>
+          <div class="slider-item">
+            <label>Frames xác nhận <span id="frameVal">10</span></label>
+            <input type="range" min="3" max="30" value="10" id="frameSlider"
+              oninput="document.getElementById('frameVal').textContent=this.value">
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div>
+        <p class="section-label">🔍 Loại phát hiện</p>
+        <div class="toggle-list">
+          <div class="toggle-item">
+            <span>Điện thoại</span>
+            <label class="toggle-switch"><input type="checkbox" checked><div class="toggle-slider"></div></label>
+          </div>
+          <div class="toggle-item">
+            <span>Tai nghe</span>
+            <label class="toggle-switch"><input type="checkbox" checked><div class="toggle-slider"></div></label>
+          </div>
+          <div class="toggle-item">
+            <span>Quay đầu</span>
+            <label class="toggle-switch"><input type="checkbox" checked><div class="toggle-slider"></div></label>
+          </div>
+          <div class="toggle-item">
+            <span>Tay bất thường</span>
+            <label class="toggle-switch"><input type="checkbox" checked><div class="toggle-slider"></div></label>
+          </div>
+          <div class="toggle-item">
+            <span>Nhìn xuống lâu</span>
+            <label class="toggle-switch"><input type="checkbox" checked><div class="toggle-slider"></div></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div>
+        <p class="section-label">💾 Ghi nhận</p>
+        <div class="btn-group">
+          <button class="btn btn-outline" onclick="exportLog()">📋 Xuất Log CSV</button>
+          <button class="btn btn-outline" onclick="clearLog()">🗑 Xóa Log</button>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- CENTER: Video Monitor -->
+    <section class="video-area">
+      <div class="video-wrapper">
+        <!-- MJPEG stream từ Flask backend -->
+        <img id="mjpegStream"
+          src=""
+          style="max-width:100%;max-height:100%;object-fit:contain;display:none"
+          alt="Video Stream">
+
+        <div class="alert-overlay" id="alertOverlay"></div>
+        <div class="scanline"></div>
+        <div class="hud-corner tl"></div>
+        <div class="hud-corner tr"></div>
+        <div class="hud-corner bl"></div>
+        <div class="hud-corner br"></div>
+
+        <!-- Placeholder khi chưa có stream -->
+        <div class="no-stream" id="noStream">
+          <div class="no-stream-icon">📹</div>
+          <p>Nhấn <strong>Bắt đầu</strong> để kết nối camera</p>
+          <p style="font-size:12px;margin-top:4px">Đảm bảo <code>web_server.py</code> đang chạy</p>
+        </div>
+      </div>
+
+      <!-- Performance metrics strip -->
+      <div class="metrics-strip">
+        <div class="metric-cell">
+          <div class="metric-label">FPS</div>
+          <div class="metric-value" id="metFPS">0.0</div>
+          <div class="metric-sub">Thời gian thực</div>
+        </div>
+        <div class="metric-cell">
+          <div class="metric-label">Precision (YOLO)</div>
+          <div class="metric-value" id="metPrec">90.8%</div>
+          <div class="metric-sub">Độ chính xác</div>
+        </div>
+        <div class="metric-cell">
+          <div class="metric-label">mAP@0.5 (YOLO)</div>
+          <div class="metric-value" id="metMAP">93.3%</div>
+          <div class="metric-sub">Độ chuẩn xác</div>
+        </div>
+        <div class="metric-cell">
+          <div class="metric-label">F1-Score (MP)</div>
+          <div class="metric-value" id="metF1">85.3%</div>
+          <div class="metric-sub">Phân tích hành vi</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT SIDEBAR: Alerts -->
+    <aside class="sidebar-right">
+
+      <div class="panel-header">
+        <div class="panel-title">
+          🚨 Nhật ký Cảnh báo
+          <span class="badge-count" id="alertCount">0</span>
+        </div>
+        <button class="btn-icon" onclick="clearLog()" title="Xóa log">✕</button>
+      </div>
+
+      <div class="event-log" id="eventLog">
+        <div class="log-empty" id="logEmpty">Chưa phát hiện sự kiện nào…</div>
+      </div>
+
+      <div class="risk-panel">
+        <div class="risk-label">
+          <span>Mức độ Rủi ro</span>
+          <span id="riskScore" style="color:var(--accent2); font-weight:700">0 / 20</span>
+        </div>
+        <div class="risk-track">
+          <div class="risk-fill" id="riskFill" style="width:0%"></div>
+        </div>
+        <div class="risk-ticks"><span>AN TOÀN</span><span>NGHI NGỜ</span><span>BÁO ĐỘNG</span></div>
+      </div>
+
+      <div class="chart-panel">
+        <p class="section-label" style="margin-bottom:6px">📈 Rủi ro theo thời gian</p>
+        <canvas id="riskChart"></canvas>
+      </div>
+
+    </aside>
+
+  </div><!-- .main -->
+</div><!-- .app -->
+
+<!-- Hidden video element for camera/file source -->
+<video id="videoSource" style="display:none" autoplay muted playsinline></video>
+
+<script>
+const BACKEND = 'http://localhost:5500';
+
+const state = {
+  running:     false,
+  alertCount:  0,
+  events:      [],
+  riskScore:   0,
+  riskHistory: Array(50).fill(0),
+  fps:         0.0
+};
+
+const noStream    = document.getElementById('noStream');
+const alertOverlay= document.getElementById('alertOverlay');
+const eventLog    = document.getElementById('eventLog');
+const statusBadge = document.getElementById('statusBadge');
+const statusText  = document.getElementById('statusText');
+const mjpeg       = document.getElementById('mjpegStream');
+
+// ── Clock
+function updateClock() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('vi-VN', { hour12: false });
+}
+setInterval(updateClock, 1000); updateClock();
+
+// ── Status badge
+function setStatus(level, text) {
+  statusBadge.className = 'status-badge ' + level;
+  statusText.textContent = text;
+}
+
+// ── Start / Stop
+async function startProcessing() {
+  try {
+    await fetch(BACKEND + '/start');
+    mjpeg.src = BACKEND + '/video_feed?' + Date.now();
+    mjpeg.style.display = 'block';
+    noStream.style.display = 'none';
+    state.running = true;
+    setStatus('warn', 'ĐANG GIÁM SÁT');
+    connectSSE();
+  } catch(e) {
+    noStream.querySelector('p').textContent = 'Lỗi: Không kết nối được server!';
+    setStatus('ok', 'LỖI KẾT NỐI');
+  }
+}
+
+async function stopProcessing() {
+  await fetch(BACKEND + '/stop').catch(()=>{});
+  mjpeg.src = '';
+  mjpeg.style.display = 'none';
+  noStream.style.display = 'flex';
+  state.running = false;
+  setStatus('ok', 'ĐÃ DỪNG');
+  if (sseSource) { sseSource.close(); sseSource = null; }
+}
+
+// ── SSE (real-time alerts from backend)
+let sseSource = null;
+function connectSSE() {
+  if (sseSource) sseSource.close();
+  sseSource = new EventSource(BACKEND + '/alerts');
+  sseSource.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    if (data.heartbeat) {
+      // Update metrics
+      if (data.fps !== undefined) {
+        state.fps = data.fps;
+        document.getElementById('metFPS').textContent = data.fps;
+      }
+      if (data.score !== undefined) {
+        state.riskScore = data.score;
+        document.getElementById('riskScore').textContent = data.score + ' / 20';
+        document.getElementById('riskFill').style.width = (data.score / 20 * 100) + '%';
+        state.riskHistory.shift(); state.riskHistory.push(data.score);
+        drawRiskChart();
+      }
+      if (data.level && state.running) {
+        const labels = { OK:'ĐANG GIÁM SÁT', LOW:'CẢNH BÁO NHẸ', MEDIUM:'CẢNH BÁO', HIGH:'NGHI NGỜ', CRITICAL:'CẢNH BÁO CAO' };
+        if (data.level === 'HIGH' || data.level === 'CRITICAL')
+          setStatus('danger', labels[data.level] || data.level);
+        else if (data.level === 'OK')
+          setStatus('warn', 'ĐANG GIÁM SÁT');
+      }
+    } else {
+      addEvent(data.type, data.detail, data.level, data.image);
+    }
+  };
+  sseSource.onerror = () => {
+    if (state.running) setTimeout(connectSSE, 2000);
+  };
+}
+
+const EVENT_META = {
+  'PHONE_DETECTED':    { label: 'PHÁT HIỆN ĐIỆN THOẠI', level: 'HIGH'   },
+  'EARPHONE_DETECTED': { label: 'PHÁT HIỆN TAI NGHE',   level: 'HIGH'   },
+  'CHEAT_SHEET':       { label: 'PHÁT HIỆN TÀI LIỆU',   level: 'MEDIUM' },
+  'LOOKING_AWAY':      { label: 'QUAY ĐẦU SANG NGANG',  level: 'LOW'    },
+  'HEAD_DOWN':         { label: 'NHÌN XUỐNG QUÁ LÂU',   level: 'LOW'    },
+  'HAND_NEAR_EAR':     { label: 'TAY GẦN TAI',          level: 'MEDIUM' },
+};
+
+let alertFlashTimer = null;
+function addEvent(type, detail, lvl, imageUrl) {
+  const meta  = EVENT_META[type] || { label: type, level: lvl || 'LOW' };
+  const level = meta.level;
+  const time  = new Date().toLocaleTimeString('vi-VN');
+
+  state.alertCount++;
+  state.events.unshift({ type, detail, level, time, image: imageUrl });
+  document.getElementById('alertCount').textContent = state.alertCount;
+  
+  const empty = document.getElementById('logEmpty');
+  if (empty) empty.style.display = 'none';
+
+  const el = document.createElement('div');
+  el.className = `event-item level-${level}`;
+  
+  let html = `
+    <div class="event-header">
+      <span class="event-type level-${level}">${meta.label}</span>
+      <span class="event-time">${time}</span>
+    </div>
+    <div class="event-detail">${detail}</div>`;
+    
+  if (imageUrl) {
+     html += `
+     <div style="margin-top:6px; border-radius:4px; overflow:hidden; border:1px solid var(--border); cursor:pointer;"
+          onclick="window.open(BACKEND + '${imageUrl}', '_blank')">
+       <img src="${BACKEND}${imageUrl}" style="width:100%; display:block; object-fit:cover; max-height:80px;" alt="Bằng chứng">
+     </div>`;
+  }
+  
+  el.innerHTML = html;
+  eventLog.insertBefore(el, eventLog.firstChild);
+
+  if (level === 'HIGH' || level === 'CRITICAL') {
+    setStatus('danger', 'CẢNH BÁO CAO!');
+    alertOverlay.classList.add('active');
+    clearTimeout(alertFlashTimer);
+    alertFlashTimer = setTimeout(() => {
+      alertOverlay.classList.remove('active');
+      if (state.running) setStatus('warn', 'ĐANG GIÁM SÁT');
+    }, 3000);
+  }
+}
+
+function clearLog() {
+  state.events = []; state.alertCount = 0; state.riskScore = 0;
+  document.getElementById('alertCount').textContent = '0';
+  eventLog.innerHTML = '<div class="log-empty" id="logEmpty">Chưa phát hiện sự kiện nào…</div>';
+  document.getElementById('riskFill').style.width = '0%';
+  document.getElementById('riskScore').textContent = '0 / 20';
+}
+
+function exportLog() {
+  let csv = 'Thời gian,Loại,Chi tiết,Mức độ\n';
+  state.events.forEach(e => { csv += `${e.time},"${e.type}","${e.detail}",${e.level}\n`; });
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = `examguard_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+function drawRiskChart() {
+  const c = document.getElementById('riskChart');
+  if(!c) return;
+  c.width = c.offsetWidth; c.height = 50;
+  const cx = c.getContext('2d');
+  const W = c.width, H = c.height, pts = state.riskHistory;
+  const step = W / (pts.length - 1);
+  cx.clearRect(0, 0, W, H);
+  const grad = cx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,'rgba(59,130,246,.4)'); grad.addColorStop(1,'rgba(59,130,246,.02)');
+  cx.beginPath();
+  pts.forEach((v,i) => { const x=i*step, y=H-(v/20*(H-4))-2; i===0?cx.moveTo(x,y):cx.lineTo(x,y); });
+  cx.lineTo(W,H); cx.lineTo(0,H); cx.closePath(); cx.fillStyle=grad; cx.fill();
+  cx.beginPath();
+  pts.forEach((v,i) => { const x=i*step, y=H-(v/20*(H-4))-2; i===0?cx.moveTo(x,y):cx.lineTo(x,y); });
+  cx.strokeStyle='#3b82f6'; cx.lineWidth=1.5; cx.lineJoin='round'; cx.stroke();
+}
+
+window.addEventListener('resize', drawRiskChart);
+drawRiskChart();
+</script>
+</body>
+</html>

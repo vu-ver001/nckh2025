@@ -1,0 +1,11 @@
+{
+  "purpose": "Independent one-person recordings; never include these files in training",
+  "clips": [
+    {"file": "normal_01.mp4", "scenario": "Ngồi làm bài, khoảng 30 giây", "events": null},
+    {"file": "normal_02.mp4", "scenario": "Viết và nhìn xuống giấy, khoảng 30 giây", "events": null},
+    {"file": "objects_01.mp4", "scenario": "Dùng máy tính Casio, khoảng 30 giây", "events": null},
+    {"file": "objects_02.mp4", "scenario": "Dùng hộp bút hoặc sổ, khoảng 30 giây", "events": null},
+    {"file": "phone_01.mp4", "scenario": "Điện thoại rõ trong khung hình, khoảng 30 giây", "events": null},
+    {"file": "phone_02.mp4", "scenario": "Điện thoại xa hoặc bị tay che, khoảng 30 giây", "events": null}
+  ]
+}

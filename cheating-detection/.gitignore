@@ -1,0 +1,37 @@
+# Python
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*.pyd
+
+# Frontend
+dashboard/node_modules/
+dashboard/dist/
+dashboard/.env.local
+
+# Logs, snapshots, artifacts & caches
+logs/
+snapshots/
+artifacts/
+Ultralytics/
+runs/
+.yolo/
+
+# Large archives & raw datasets (>100MB or thousands of raw images)
+*.zip
+*.tar.gz
+*.rar
+dataset/phone_detection/
+dataset/phone_detection_v2/
+dataset/phone_detection_v3/
+dataset/phone_negative_candidates/
+
+# Intermediate epoch checkpoints
+**/epoch*.pt
+
+# OS & Junk
+.DS_Store
+Thumbs.db
+__MACOSX/

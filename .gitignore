@@ -1,0 +1,53 @@
+# Python
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+
+# Node / Frontend
+node_modules/
+**/node_modules/
+dashboard/node_modules/
+dashboard/dist/
+dashboard/.env.local
+**/dist/
+
+# Logs, snapshots, artifacts & caches
+logs/
+**/logs/
+snapshots/
+**/snapshots/
+artifacts/
+**/artifacts/
+Ultralytics/
+**/Ultralytics/
+.yolo/
+runs/
+**/runs/
+
+# Large archives & raw datasets (>100MB or thousands of raw images)
+*.zip
+*.tar.gz
+*.rar
+*.7z
+**/dataset/phone_detection/
+**/dataset/phone_detection_v2/
+**/dataset/phone_detection_v3/
+**/dataset/phone_negative_candidates/
+
+# Intermediate training epoch checkpoints
+**/epoch*.pt
+
+# OS & Junk files
+.DS_Store
+Thumbs.db
+__MACOSX/
+desktop.ini
+~$*
+
+# IDEs
+.vscode/
+.idea/

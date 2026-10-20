@@ -1,0 +1,185 @@
+/* ─── VideoFeed ───────────────────────────────────────── */
+.video-feed {
+  position: relative;
+  background: #030712;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 2px solid var(--border-subtle);
+  transition: border-color var(--transition-smooth), box-shadow var(--transition-smooth);
+  cursor: pointer;
+  aspect-ratio: 16 / 10;
+}
+
+.video-feed:hover {
+  border-color: var(--border-strong);
+}
+
+.video-feed.alerting {
+  border-color: var(--status-danger);
+  animation: flash-border 0.6s infinite alternate;
+}
+
+.video-feed.expanded {
+  position: fixed;
+  inset: 80px 340px 20px 260px;
+  z-index: 100;
+  border-radius: var(--radius-lg);
+  aspect-ratio: auto;
+}
+
+/* Canvas */
+.video-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* HUD overlays */
+.video-hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Corner marks */
+.hud-corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: var(--accent-secondary);
+  border-style: solid;
+  opacity: 0.5;
+  transition: opacity var(--transition-smooth);
+}
+
+.video-feed:hover .hud-corner {
+  opacity: 0.8;
+}
+
+.hud-corner.tl { top: 8px; left: 8px; border-width: 2px 0 0 2px; }
+.hud-corner.tr { top: 8px; right: 8px; border-width: 2px 2px 0 0; }
+.hud-corner.bl { bottom: 8px; left: 8px; border-width: 0 0 2px 2px; }
+.hud-corner.br { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; }
+
+.video-feed.alerting .hud-corner {
+  border-color: var(--status-danger);
+  opacity: 1;
+}
+
+/* Scanline */
+.video-scanline {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.03) 0px,
+    rgba(0, 0, 0, 0.03) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+/* Top info bar */
+.video-info-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: var(--space-2) var(--space-3);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.video-cam-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.video-rec-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--status-danger);
+  animation: pulse-dot 1s infinite;
+}
+
+.video-fps-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--status-safe);
+  background: rgba(0, 0, 0, 0.5);
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+}
+
+/* Bottom info */
+.video-bottom-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: var(--space-2) var(--space-3);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.video-location {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.video-students {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Alert overlay flash */
+.video-alert-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 4px solid transparent;
+  border-radius: var(--radius-md);
+  transition: all 0.2s;
+}
+
+.video-alert-overlay.active {
+  border-color: var(--status-danger);
+  box-shadow: inset 0 0 40px rgba(239, 68, 68, 0.15);
+  animation: flash-border 0.5s infinite alternate;
+}
+
+/* Alert toast */
+.video-alert-toast {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(239, 68, 68, 0.90);
+  color: white;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  animation: alert-pulse 0.5s infinite alternate;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 0 30px rgba(239, 68, 68, 0.5);
+}
